@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>دورة تأهيل أفراد</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap" rel="stylesheet" />
+
+<style>
+  /* نفس التنسيق السابق */
+  body {
+    margin: 0; padding: 0;
+    font-family: 'Orbitron', sans-serif;
+    background: #111;
+    color: #eee;
+    overflow-x: hidden;
+  }
+
+  .background-blur {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRf5HNemAJbYxtZQuKfgn-anFL4B7i75GAJlcQXF1bYSgLqdfzKIV0VnItm8gDLmIpzJtw&usqp=CAU') 
+      no-repeat center center/cover;
+    filter: blur(8px) brightness(0.4);
+    z-index: -1;
+  }
+
+  /* باقي التنسيقات كالمعتاد */
+
+  .container {
+    width: 90%;
+    max-width: 900px;
+    margin: 60px auto 40px auto;
+    background: rgba(30,30,30,0.85);
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 0 20px #666;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 2.5em;
+    margin-bottom: 25px;
+    text-shadow: 0 0 10px #fff;
+  }
+
+  .input-group {
+    margin-bottom: 20px;
+  }
+
+  input {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    font-size: 1.2em;
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    box-shadow: 0 0 10px #555 inset;
+    transition: 0.3s;
+  }
+
+  input::placeholder {
+    color: #ccc;
+  }
+
+  input:focus {
+    background: rgba(255,255,255,0.2);
+    box-shadow: 0 0 15px #88aaff inset;
+    outline: none;
+  }
+
+  button {
+    width: 100%;
+    padding: 15px;
+    font-size: 1.4em;
+    font-weight: bold;
+    border-radius: 8px;
+    border: none;
+    background: #2c3e50; /* أزرق ملكي غامق */
+    color: white;
+    cursor: pointer;
+    margin-top: 15px;
+    transition: 0.3s;
+  }
+
+  button:hover {
+    background: #34495e; /* رمادي متناسق */
+  }
+
+  .question-card {
+    background: rgba(50,50,50,0.85);
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 0 15px #444;
+  }
+
+  .answer {
+    padding: 12px;
+    border-radius: 8px;
+    margin: 10px 0;
+    background: rgba(200,200,200,0.05);
+    border: 1px solid #555;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+
+  .answer:hover {
+    background: rgba(150,150,150,0.15);
+    transform: translateX(-5px);
+  }
+
+  .answer.selected {
+    background: rgba(52, 73, 94, 0.6); /* أزرق ملكي غامق */
+    border-color: #34495e; /* رمادي متناسق */
+    box-shadow: 0 0 12px #34495e;
+  }
+
+  .correct {
+    background: rgba(0, 255, 0, 0.15);
+    border-color: #0f0;
+    box-shadow: 0 0 10px #0f0;
+  }
+
+  .wrong {
+    background: rgba(255, 0, 0, 0.15);
+    border-color: #f00;
+    box-shadow: 0 0 10px #f00;
+  }
+
+  #resultBox {
+    text-align: center;
+    margin-top: 30px;
+    padding: 20px;
+    border-radius: 12px;
+    font-size: 1.8em;
+    font-weight: bold;
+  }
+
+  .pass {
+    color: #0f0;
+    text-shadow: 0 0 10px #0f0;
+  }
+
+  .fail {
+    color: #f00;
+    text-shadow: 0 0 10px #f00;
+  }
+</style>
+</head>
+<body>
+
+  <div class="background-blur"></div>
+
+  <div class="container" id="infoPage">
+    <h1>دورة تأهيل أفراد</h1>
+    <div class="input-group">
+      <input id="nameInput" placeholder="الاسم " />
+    </div>
+
+    <div class="input-group">
+      <input id="idInput" placeholder="الآيدي" />
+    </div>
+
+    <div class="input-group">
+      <input id="milInput" placeholder="الكود العسكري" />
+    </div>
+
+    <button onclick="startExam()">دخول الاختبار</button>
+  </div>
+
+  <div class="container" id="examPage" style="display:none;">
+    <h1> دورة تأهيل أفراد</h1>
+    <div id="questions"></div>
+    <button onclick="finishExam()">إنهاء الاختبار</button>
+  </div>
+
+  <div class="container" id="resultPage" style="display:none;">
+    <h1>النتيجة</h1>
+    <div id="resultBox"></div>
+  </div>
+
+<script>
+  const questionsData = [
+    {
+      q: "ما هي وضعية الاستعداد؟",
+      a: [
+        "أ) وضعية الجلوس في مكان آمن",
+        "ب) الاستعداد هو التحية",
+        "ج) وضعية الوقوف المستعدة"
+      ],
+      c: 1
+    },
+    {
+      q: "ما هو 9-0؟",
+      a: [
+        "أ) التوجه إلى القسم",
+        "ب) القيام بحركة تكتيكية",
+        "ج) الوقوف في حالة استعداد"
+      ],
+      c: 0
+    },
+    {
+      q: "ما هو التعريف عن النفس؟",
+      a: [
+        "أ) هو ذكر اسمك ورقمك العسكري فقط",
+        "ب) هو ذكر اسمك وكودك العسكري ورجلك",
+        "ج) هو ذكر اسمك، كودك العسكري، رتبتك، قطاعك، وزاراتك"
+      ],
+      c: 2
+    },
+    {
+      q: "ما هو الاستعداد الميداني؟",
+      a: [
+        "أ) هو أن تحضر سلاح آلي (AK)",
+        "ب) هو أن تصدح على الجاهزية في الموقع",
+        "ج) هو تجهيز العتاد والمعدات العسكرية"
+      ],
+      c: 0
+    },
+    {
+      q: "ما هي القيافه العسكريه؟",
+      a: [
+        "أ) الزي الرسمي الكامل وعدم وجود شعر أو لحي",
+        "ب) الزي الرسمي الكامل وعدم وجود شقوق",
+        "ج) تلبس الزي الرسمي فقط"
+      ],
+      c: 0
+    },
+    {
+      q: "هل يحق لك كا عضو في الاستخبارات أن تلبس لبس مواطن في المدينة الأولى؟",
+      a: [
+        "أ) نعم، في حالات الطوارئ",
+        "ب) نعم، لكن فقط في حالات سرية",
+        "ج) لا"
+      ],
+      c: 2
+    },
+    {
+      q: "هل يحق للمواطن أن يدخل قسم الاستخبارات؟",
+      a: [
+        "أ) نعم، إذا كان لديه سبب رسمي",
+        "ب) نعم، إذا كان لديه تصريح أمني",
+        "ج) لا"
+      ],
+      c: 2
+    },
+    {
+      q: "هل يحق لي مداهمة أكثر من عصابتين في اليوم؟",
+      a: [
+        "أ) نعم، في حال الطوارئ",
+        "ب) لا يمكن ذلك إلا بإذن قيادة",
+        "ج) لا"
+      ],
+      c: 2
+    },
+    {
+      q: "ما هو 2-10؟",
+      a: [
+        "أ) إشعار توجيه",
+        "ب) رسالة بعد العودة",
+        "ج) غير صحيح"
+      ],
+      c: 2
+    },
+    {
+      q: "ما هو 20-10؟",
+      a: [
+        "أ) إشعار مكان الانتظار",
+        "ب) تحديد نقطة اجتماع الأفراد",
+        "ج) معناه موقعك أين"
+      ],
+      c: 2
+    },
+    {
+      q: "ما هو 10-0؟",
+      a: [
+        "أ) طلب تعزيز فوري",
+        "ب) أمر بإيقاف البلاغ",
+        "ج) قطع البلاغ"
+      ],
+      c: 2
+    },
+    {
+      q: "ما معنى كود 7؟",
+      a: [
+        "أ) لدي مهمة سرية",
+        "ب) الطوارئ المستمرة",
+        "ج) عندي سحر أو خلل"
+      ],
+      c: 2
+    },
+    {
+      q: "ما معنى كود 1؟",
+      a: [
+        "أ) فحص معداتنا",
+        "ب) سلامة الميدان",
+        "ج) سفتي بدون صوت"
+      ],
+      c: 2
+    },
+    {
+      q: "ما معنى 7-0؟",
+      a: [
+        "أ) تسجيل الدخول",
+        "ب) إنهاء المهمة",
+        "ج) تسجيل خروج"
+      ],
+      c: 2
+    }
+  ];
+
+  let selectedAnswers = [];
+
+  function startExam() {
+    document.getElementById("infoPage").style.display = "none";
+    document.getElementById("examPage").style.display = "block";
+
+    let qBox = document.getElementById("questions");
+    qBox.innerHTML = "";
+
+    questionsData.forEach((item, i) => {
+      let card = document.createElement("div");
+      card.className = "question-card";
+
+      let qTitle = document.createElement("p");
+      qTitle.innerHTML = `<strong>${i + 1}- ${item.q}</strong>`;
+      card.appendChild(qTitle);
+
+      item.a.forEach((ans, j) => {
+        let ansBtn = document.createElement("div");
+        ansBtn.className = "answer";
+        ansBtn.innerText = ans;
+
+        ansBtn.onclick = () => {
+          let all = card.querySelectorAll(".answer");
+          all.forEach((a) => a.classList.remove("selected"));
+          ansBtn.classList.add("selected");
+          selectedAnswers[i] = j;
+        };
+
+        card.appendChild(ansBtn);
+      });
+
+      qBox.appendChild(card);
+    });
+  }
+
+  function finishExam() {
+    let score = 0;
+
+    document.getElementById("examPage").style.display = "none";
+    document.getElementById("resultPage").style.display = "block";
+
+    const cards = document.querySelectorAll(".question-card");
+
+    questionsData.forEach((item, i) => {
+      let selected = selectedAnswers[i];
+      let correct = item.c;
+
+      let answers = cards[i].querySelectorAll(".answer");
+
+      answers[correct].classList.add("correct");
+
+      if (selected !== correct) {
+        answers[selected]?.classList.add("wrong");
+      } else {
+        score++;
+      }
+    });
+
+    let result = document.getElementById("resultBox");
+    let status =
+      score >= 7
+        ? `<span class='pass'>✔ ناجح</span>`
+        : `<span class='fail'>❌ راسب</span>`;
+
+    result.innerHTML = `النتيجة: ${score} / 15 <br><br> ${status}`;
+  }
+</script>
+
+</body>
+</html>
